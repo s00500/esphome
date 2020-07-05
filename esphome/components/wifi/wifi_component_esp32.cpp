@@ -337,10 +337,19 @@ void WiFiComponent::wifi_event_callback_(system_event_id_t event, system_event_i
       }
       break;
     }
-    case SYSTEM_EVENT_STA_AUTHMODE_CHANGE: {
+    case SYSTEM_EVENT_STA_AUTHMODE_CHANGE:
+    {
       auto it = info.auth_change;
-      ESP_LOGV(TAG, "Event: Authmode Change old=%s new=%s", get_auth_mode_str(it.old_mode),
-               get_auth_mode_str(it.new_mode));
+      ESP_LOGV(TAG, "Event: Authmode Change old=%s new=%s", get_auth_mode_str(it.old_mode), get_auth_mode_str(it.new_mode));
+      if (it.new_mode == WIFI_AUTH_OPEN)
+      {
+        ESP_LOGW(TAG, "Potential Authmode downgrade detected, disconnecting...", esp_err_to_name(err));
+        err_t err = esp_wifi_disconnect();
+        if (err != ESP_OK)
+        {
+          ESP_LOGW(TAG, "Disconnect failed: %s", esp_err_to_name(err));
+        }
+      }
       break;
     }
     case SYSTEM_EVENT_STA_GOT_IP: {
